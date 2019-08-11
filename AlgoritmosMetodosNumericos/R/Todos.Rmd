@@ -1,0 +1,362 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+--
+title: "R Notebook"
+output: html_notebook
+---
+
+Biseccion 
+
+```{r}
+rm(list=ls())
+Fx = function(x) (exp(-x) + x -2)
+
+valoresError = c()
+valoresX = c()
+
+biseccion = function(a, b, error){
+  #Para graficar se crea una secuencia de números entre el rango [a,b]
+  x = seq(a, b, 0.1)
+  plot(x, Fx(x), type = "l", col = "red")
+  abline(h = 0, col = "blue")
+  x = b
+  d = (a+b) / 2.0
+  contador = 0
+  e = abs(a-b) /2.0
+  while (e > error){
+    contador = contador + 1
+    if (Fx(a) * Fx(b) > 0){
+      cat("No se puede aplicar el método\n")
+    }
+    else {
+        if (Fx(x) * Fx(a) > 0)
+          a = x
+        if (Fx(x) * Fx(b) > 0)
+          b = x
+        d = x
+        x = (a + b) / 2
+        e = abs(a-b) / 2.0
+        
+        valoresX[contador] = x
+        valoresError[contador] = e
+        cat("X: ", x, "\tError: ", e, "\n")
+    }
+  }
+  plot(valoresError, valoresX, type = "l")
+  cat("Iteracciones: ", contador, "Resultado: ", x, "\n")
+}
+
+biseccion(-3, 0, 10e-5)
+```
+
+
+Método de Newton
+e^x - pi * x
+Derivada
+e^x - pi
+
+
+
+```{r}
+rm(list=ls())
+Fx = function(x) exp(x) - pi * x
+Fx1 = function(x) exp(x) - pi
+
+Newton = function(a, b, error){
+  x = seq(a, b, 0.1)
+  plot(x, Fx(x), type = "l", col = "red")
+  abline(h = 0, v = 0, col = "blue")
+  
+  x_0 = (a + b) / 2
+  
+  contador = 0
+  dx = 0
+  repeat {
+    corr = Fx(x_0) / Fx1(x_0)
+    x_1 = x_0 - corr
+    dx = abs(corr)
+    x_0 = x_1
+    contador = contador + 1
+    
+    cat(contador, dx, "\n")
+    if (dx <= error)
+      break
+  }
+  cat ("Iteracciones: ", contador, "Resultado: ", x_1, "\n")
+}
+Newton(-1, 1, 10e-8)
+```
+
+Método del Punto Fijo
+
+```{r}
+rm(list=ls())
+Fx = function(x) exp(x) / pi
+Fx1 = function(x) log(x*pi)
+
+PuntoFijo = function(a, b, error){
+  errorX = 0
+  xInicial = a
+  x = seq(a, b, 0.1)
+  plot(x, Fx(x), type = "l", col = "orange")
+  plot(x, Fx1(x), type = "l", col = "blue")
+  abline(h = 0, v = 0, col = "red")
+  if (Fx(a) < a || Fx(b) < b)
+    cat("El intervalo no es valido\n")
+  else {
+    x_0 = (a + b) / 2
+    contador = 0
+    fxInicial = Fx(a)
+    done = FALSE
+    valoresX = c()
+    erroresX = c()
+    erroresX1 = c()
+    it = c()
+    x = 0
+    while(abs(xInicial - fxInicial) > error){
+      x = x + 1
+      contador = contador + 1
+      if (xInicial < a){
+        done = TRUE
+      }
+      if (done == FALSE){
+        xInicial = fxInicial
+        fxInicial = Fx(xInicial)
+      } else {
+        fxInicial = xInicial
+        xInicial = Fx1(fxInicial)
+      }
+      cat("Iteraccion: ", contador, "\tValor de X: ", xInicial, "\t\tError: ", errorX, "\n")
+      errorX = xInicial - errorX
+      
+      valoresX[x] = xInicial
+      i = 0
+      if (x%%2 == 0){
+        erroresX1[x] = errorX
+      } else{
+        erroresX[x] = errorX
+      }
+      it[x] = contador
+    }
+    erroresX = erroresX[-contador]
+    plot(erroresX1, erroresX, type="l",xlab="Ei+1", ylab="Ei", main="Errores", col="red")
+    
+   cat("Iteracciones: ", contador, "Resultado: ", xInicial, "\n")
+   
+  }
+}
+
+PuntoFijo(0, 3, 10e-8)
+```
+Método de la Posición falsa
+```{r}
+  Fx = function(x) exp(-x) + x -2
+  Fx1 = function(x) 1 - exp(x)
+  
+  Pfalsa = function(a, b, error){
+    e = 1
+    x = seq(a, b, 0.1)
+    plot(x, Fx(x), type = "l", col="blue")
+    abline(h=0, col = "blue")
+    valoresX = c()
+    valoresError = c()
+    it = 0
+    while (e > error) {
+      it = it + 1
+      x = (Fx(b) * a - Fx(a) * b) / (Fx(b) - Fx(a))
+      if (Fx(x) == 0) {
+        break
+      }
+      if (Fx(x) * Fx(a) < 0){
+        b = x
+      }
+      else {
+        a = x
+      }
+      e = abs(Fx(x) / Fx1(x))
+      points(rbind(c(x,0)),pch=19,cex=0.7,col="red")
+      cat("Valor de X: ", x, "\tError: ", e, "\n")
+      valoresX[it] = x
+      valoresError[it] = e
+    }
+    plot(valoresX, valoresError, type = "l")
+  }
+  Pfalsa(0, 3, 10e-8)
+```
+
+
+
+
+
+
+Método de la secante
+
+```{r}
+rm(list=ls())
+Fx = function(x) exp(x) - pi * x
+Fx1 = function(x) exp(x) - pi
+
+Secante = function(x1, x2, error){
+  x = (Fx(x2) * x1 - Fx(x1) * x2) / (Fx(x2) - Fx(x1))
+  err = 1
+  contador = 0
+  while (err > error){
+    contador = contador + 1
+    x1 = x2
+    x2 = x
+    x = (Fx(x2) * x1 - Fx(x1) * x2) / (Fx(x2) - Fx(x1))
+    if (Fx(x) == 0)
+      break
+    err = abs(Fx(x) / Fx1(x))
+    cat("Valor X: ", x, "\t\tValor del Error: ", err, "\t\tIteraccion: ", contador, "\n")
+  }
+}
+
+Secante(0, 1, 10e-8)
+```
+
+
+Método de Aitken
+
+```{r}
+rm(list=ls())
+fx<-function(x)
+{
+  signif(exp(1), 5)^x
+}
+
+fx1<-function(x)
+{
+  signif(pi,5)*x
+}
+
+fx2<-function(x)
+{
+  signif(exp(1), 5)^x-signif(pi,5)*x
+}
+
+aitken = function(f, m, x0, tol)
+{
+  
+  plot(fx, xlim = c(-2,2), ylim = c(0,6), col = "blue", main = "Grafica de las Funciones", sub = "Aitken", xlab = "x", ylab = "y")
+  par(new=TRUE)
+  curve(fx1, type = "l", col="green", axes=FALSE, ylab = "y")
+  par(new=FALSE)
+  
+  iteraciones<-c()
+  
+  Er1<-c()
+  Er2<-c()
+  
+  k<-0
+  E1<-0
+  
+  g<-parse(text=f)
+  fx = function(x){eval(g[[1]])}
+  d.<-D(parse(text=f ), "x")
+  df<-function(x) eval(d.)
+  
+  plot(fx, xlim = c(-0.5,5), ylim = c(-2,5), col = "blue", main = "Grafica funcion", sub = "Aitken", xlab = "x", ylab = "y")
+  abline(h = 0, v=0, col= "red")
+  
+  repeat
+  {
+    
+    x1 = x0 - m*(fx(x0)/df(x0))
+    dx = abs(x1-x0)
+    E2 = E1
+    E1 = dx/x1
+    cat("X=", x1, "\t", "E=", dx, "\t e=", E1,"\t Iteracion", k+1,"\n")
+    
+    if(k >= 1)
+    {
+      Er1<-c(Er1, E2)
+      Er2<-c(Er2, E1)
+    }
+    
+    k = k + 1
+    
+    if (dx < tol) break;
+    
+    x0 = x1
+    
+    
+  }
+  
+  points(x1,0)
+  
+  plot(fx, xlim = c(0,max(Er1)), ylim = c(0,max(Er2)), col = "white", main = "Errores(i) vs Errores(i+1)", sub = "Aitken", xlab = "Errores(i)", ylab = "Errores(i+1)")
+  lines(Er1, Er2, type = "l")
+  
+  Er1<-c(Er1,Er2[k])
+  iteraciones<-c(1:k)
+  plot(fx, xlim = c(0,iteraciones[k]), ylim = c(0,Er1[1]), col = "white", main = "Iteraciones vs Errores", sub = "Aitken", xlab = "Iteraciones", ylab = "Errores")
+  lines(iteraciones, Er1, type = "l")
+}
+
+aitken("2.7182^x-3.1415*x", 1, 2, 10^-8)
+
+aitken("2.7182^x-3.1415*x", 1, 0, 10^-8)
+```
+
+Metodo de Graficar Polares
+```{r}
+
+rm(list=ls())
+
+dimension = seq(-pi, pi, pi/300)
+r = 1 - 2*cos(dimension)
+r2 =  4-3*sin(dimension)
+
+interseccion = function(r1, r2, theta){
+  
+}
+
+Polar = function(theta, r, color){
+  x = 0
+  y = 0
+  axisX = 1
+  
+  for (i in 1:length(r)) {
+    if (is.nan(r[i]) == TRUE){
+      r[i] = 0
+    }
+  }
+    
+  angulo = seq(-max(theta), max(theta), theta[2] - theta[1])
+  x = r * cos(theta)
+  y = r * sin(theta)
+  plot(c(-max(r), max(r)), c(-max(r), max(r)), xlab = "Radio", ylab = "Radio")
+  
+  aux = max(r)
+
+  
+  while (aux > 0) {
+    f_i = aux * sin(angulo)
+    circun = aux * cos(angulo)
+    #Graficar la circunferencia
+    points(circun, f_i, pch="-", col="blue", cex = 0.3)
+    text(axisX + 0.2, -0.2, axisX, col="blue")
+    axisX = axisX + 1
+    aux = aux - 1
+
+  }
+  abline(v=((max(circun) + min(circun)) / 2), col="blue")
+  abline(h=((max(circun) + min(circun)) / 2), col="blue")
+  #Graficar las rectas que atraviesan
+  segments(-max(r) + 0.5, -max(r) + 0.5, max(r) - 0.5, max(r) - 0.5, col="blue")
+  segments(-max(r) + 0.5, max(r) - 0.5, max(r) - 0.5, max(r) + 0.5, col="blue")
+  points(x, y, pch = 20, col = color, cex = 1)
+}
+
+Polar(dimension, r, "green")
+par(new=T)
+Polar(dimension, r2, "orange")
+
+
+```
+
+
